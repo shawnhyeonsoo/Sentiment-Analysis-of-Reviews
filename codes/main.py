@@ -5,6 +5,8 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from openpyxl import Workbook
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
+import numpy as np
+import string
 
 # openpyxl을 이용해 엑셀 파일로 저장하기 위한 준비 과정
 excell = Workbook(write_only=True)
@@ -53,3 +55,31 @@ for review in review_list:
     ws.append(list1)  # 지금까지 뽑아냈던 내용들을 openpyxl worksheet에 저장
 
 excell.save('imdb_.xlsx')  # imdb_.xlsx라는 파일명으로 엑셀파일 저장
+keywords= []
+bow = []
+for reviews in list2:
+    sentences = tokenize.sent_tokenize(reviews)
+    for sentence in sentences:
+        word_list = tokenize.word_tokenize(sentence)
+        for word in word_list:
+            if (word not in bow) and (word not in STOPWORDS) and (word not in string.punctuation) and (word not in '......') and (len(word) > 2):
+                bow.append(word)
+
+for reviews in list2:
+    sentences = tokenize.sent_tokenize(reviews)
+    DTM = np.array([[0]*len(sentences)]*len(bow))
+    for sentence in sentences:
+        word_list = tokenize.word_tokenize(sentence)
+        for word in word_list:
+            if word in bow:
+                DTM[bow.index(word)][sentences.index(sentence)] += 1
+    U, s, VT = np.linalg.svd(DTM, full_matrices=True)
+    S = np.zeros((len(bow),len(sentences)))
+    S[:len(sentences), :len(sentences)] = np.diag(s)
+    S = S[:2, :2]
+    U = U[:, :2]
+    VT = VT[:2, :]
+    A_prime = np.dot(np.dot(U, S), VT)
+    #print(A_prime.round(2))
+    print(np.amax(A_prime))
+    result = np.where(A_prime == np.amax(A_prime))
