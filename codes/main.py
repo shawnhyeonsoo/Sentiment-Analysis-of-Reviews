@@ -83,3 +83,5 @@ for reviews in list2:
     #print(A_prime.round(2))
     print(np.amax(A_prime))
     result = np.where(A_prime == np.amax(A_prime))
+    for i in result[0]:
+        keywords.append(bow[i])
